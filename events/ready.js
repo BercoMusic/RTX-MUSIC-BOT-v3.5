@@ -22,7 +22,7 @@ console.log('\x1b[36m%s\x1b[0m', '|    🚀 Commands Distracted!');
 console.log('\x1b[32m%s\x1b[0m', `|    🌼 Logged in as ${client.user.username}`);
 
 setInterval(() => client.user.setActivity({ 
-  name: `shâdow shâznessi çok seviyor.`, 
+  name: `/help`, 
   type: ActivityType.Watching }), 10000);
 client.errorLog = config.errorLog
 } else {
