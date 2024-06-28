@@ -76,12 +76,12 @@ fs.readdir(config.commandsDir, (err, files) => {
   });
 });
 
-if (config.TOKEN) {
-  client.login(config.TOKEN).catch(e => {
+if (process.env.TOKEN) {
+  client.login(process.env.TOKEN).catch(e => {
     console.log("Bot TOKEN'i geçersiz!")
   });
 } else {
-  console.log("Lütfen config.js dosyasına bot tokeninizi girin!")
+  console.log("TOKEN environment variable'ı bulunamadı!")
 }
 
 process.on('unhandledRejection', error => {
