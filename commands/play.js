@@ -21,17 +21,18 @@ module.exports = {
 
       let res;
       try {
-        res = await client.player.search(name, {
-          member: interaction.member,
-          textChannel: interaction.channel,
-          interaction
+        res = await client.distube.search(name, {
+          limit: 10,
+          type: 'video'
         });
+        console.log("Search results:", res); // Debug: log the search results
       } catch (e) {
         console.error(`Error during search: ${e}`);
         return interaction.reply({ content: `❌ No results`, ephemeral: true }).catch(e => { });
       }
 
-      if (!res || !res.tracks || !res.tracks.length) {
+      if (!res || !res.length) {
+        console.log("No results found:", res); // Debug: log if no results
         return interaction.reply({ content: `❌ No results`, ephemeral: true }).catch(e => { });
       }
 
@@ -39,7 +40,7 @@ module.exports = {
       embed.setColor(client.config.embedColor);
       embed.setTitle(`Found: ${name}`);
 
-      const maxTracks = res.tracks.slice(0, 10);
+      const maxTracks = res.slice(0, 10);
 
       let track_button_creator = maxTracks.map((song, index) => {
         return new ButtonBuilder()
@@ -64,7 +65,7 @@ module.exports = {
           .setCustomId('cancel')
       );
 
-      embed.setDescription(`${maxTracks.map((song, i) => `**${i + 1}**. [${song.title}](${song.url}) | \`${song.author}\``).join('\n')}\n\n✨Choose a song from below!!`);
+      embed.setDescription(`${maxTracks.map((song, i) => `**${i + 1}**. [${song.name}](${song.url}) | \`${song.uploader.name}\``).join('\n')}\n\n✨Choose a song from below!!`);
 
       let code;
       if (buttons2) {
@@ -87,10 +88,10 @@ module.exports = {
             default: {
               selectedThumbnailURL = maxTracks[Number(button.customId) - 1].thumbnail;
               embed.setThumbnail(selectedThumbnailURL);
-              embed.setDescription(`**${maxTracks[Number(button.customId) - 1].title}**`);
+              embed.setDescription(`**${maxTracks[Number(button.customId) - 1].name}**`);
               await interaction.editReply({ embeds: [embed], components: [] }).catch(e => { });
               try {
-                await client.player.play(interaction.member.voice.channel, maxTracks[Number(button.customId) - 1].url, {
+                await client.distube.play(interaction.member.voice.channel, maxTracks[Number(button.customId) - 1].url, {
                   member: interaction.member,
                   textChannel: interaction.channel,
                   interaction
