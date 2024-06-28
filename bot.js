@@ -14,7 +14,7 @@
    ## YT : https://www.youtube.com/channel/UCPbAvYWBgnYhliJa1BIrv0A
 */
 
-const { Client, GatewayIntentBits, Partials } = require("discord.js");
+const { Client, GatewayIntentBits } = require("discord.js");
 const { DisTube } = require("distube");
 const { SpotifyPlugin } = require("@distube/spotify");
 const { SoundCloudPlugin } = require("@distube/soundcloud");
@@ -26,13 +26,16 @@ const fs = require("fs");
 const path = require('path');
 
 const client = new Client({
-  intents: Object.keys(GatewayIntentBits).map((a) => {
-    return GatewayIntentBits[a];
-  }),
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ]
 });
 
 client.config = config;
-client.player = new DisTube(client, {
+client.distube = new DisTube(client, {
   leaveOnStop: config.opt.voiceConfig.leaveOnStop,
   leaveOnFinish: config.opt.voiceConfig.leaveOnFinish,
   leaveOnEmpty: config.opt.voiceConfig.leaveOnEmpty.status,
@@ -47,7 +50,7 @@ client.player = new DisTube(client, {
   ],
 });
 
-const player = client.player;
+const distube = client.distube;
 
 fs.readdir("./events", (_err, files) => {
   files.forEach((file) => {
@@ -58,12 +61,13 @@ fs.readdir("./events", (_err, files) => {
     delete require.cache[require.resolve(`./events/${file}`)];
   });
 });
+
 fs.readdir("./events/player", (_err, files) => {
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
     const player_events = require(`./events/player/${file}`);
     let playerName = file.split(".")[0];
-    player.on(playerName, player_events.bind(null, client));
+    distube.on(playerName, player_events.bind(null, client));
     delete require.cache[require.resolve(`./events/player/${file}`)];
   });
 });
@@ -87,8 +91,6 @@ fs.readdir(config.commandsDir, (err, files) => {
   });
 });
 
-
-
 if (config.TOKEN || process.env.TOKEN) {
   client.login(config.TOKEN || process.env.TOKEN).catch((e) => {
     console.log('TOKEN ERROR❌❌');
@@ -99,7 +101,6 @@ if (config.TOKEN || process.env.TOKEN) {
   }, 2000);
 }
 
-
 if(config.mongodbURL || process.env.MONGO){
   const mongoose = require("mongoose")
   mongoose.connect(config.mongodbURL || process.env.MONGO, {
@@ -108,11 +109,11 @@ if(config.mongodbURL || process.env.MONGO){
   }).then(async () => {
     console.log('\x1b[32m%s\x1b[0m', `|    🍔 Connected MongoDB!`)
   }).catch((err) => {
-    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Failed to connect MongoDB!`)})
-  } else {
+    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Failed to connect MongoDB!`)
+  })
+} else {
   console.log('\x1b[32m%s\x1b[0m', `|    🍔 Error MongoDB!`)
-  }
-
+}
 
 const express = require("express");
 const app = express();
