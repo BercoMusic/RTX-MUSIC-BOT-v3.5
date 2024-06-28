@@ -1,11 +1,8 @@
 const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const db = require("../mongoDB");
-
-let selectedThumbnailURL;
 
 module.exports = {
   name: "play",
-  description: "come one let's hear some music!!",
+  description: "come on, let's hear some music!",
   permissions: "0x0000000000000800",
   options: [{
     name: 'name',
@@ -18,23 +15,18 @@ module.exports = {
     try {
       const name = interaction.options.getString('name');
       if (!name) return interaction.reply({ content: `❌ Enter a valid song name.`, ephemeral: true }).catch(e => { });
-
+      
       let res;
       try {
         res = await client.distube.search(name, {
           limit: 10,
           type: 'video'
         });
-        console.log("Search results:", res); // Debug: log the search results
       } catch (e) {
-        console.error(`Error during search: ${e}`);
-        return interaction.reply({ content: `❌ No results`, ephemeral: true }).catch(e => { });
+        return interaction.editReply({ content: `❌ No results` }).catch(e => { });
       }
 
-      if (!res || !res.length) {
-        console.log("No results found:", res); // Debug: log if no results
-        return interaction.reply({ content: `❌ No results`, ephemeral: true }).catch(e => { });
-      }
+      if (!res || !res.length) return interaction.reply({ content: `❌ No results`, ephemeral: true }).catch(e => { });
 
       const embed = new EmbedBuilder();
       embed.setColor(client.config.embedColor);
@@ -51,11 +43,16 @@ module.exports = {
 
       let buttons1;
       let buttons2;
-      if (track_button_creator.length > 5) {
+      if (track_button_creator.length > 10) {
         buttons1 = new ActionRowBuilder().addComponents(track_button_creator.slice(0, 5));
         buttons2 = new ActionRowBuilder().addComponents(track_button_creator.slice(5, 10));
       } else {
-        buttons1 = new ActionRowBuilder().addComponents(track_button_creator);
+        if (track_button_creator.length > 5) {
+          buttons1 = new ActionRowBuilder().addComponents(track_button_creator.slice(0, 5));
+          buttons2 = new ActionRowBuilder().addComponents(track_button_creator.slice(5, Number(track_button_creator.length)));
+        } else {
+          buttons1 = new ActionRowBuilder().addComponents(track_button_creator);
+        }
       }
 
       let cancel = new ActionRowBuilder().addComponents(
@@ -68,7 +65,7 @@ module.exports = {
       embed.setDescription(`${maxTracks.map((song, i) => `**${i + 1}**. [${song.name}](${song.url}) | \`${song.uploader.name}\``).join('\n')}\n\n✨Choose a song from below!!`);
 
       let code;
-      if (buttons2) {
+      if (buttons1 && buttons2) {
         code = { embeds: [embed], components: [buttons1, buttons2, cancel] };
       } else {
         code = { embeds: [embed], components: [buttons1, cancel] };
@@ -85,19 +82,19 @@ module.exports = {
               await interaction.editReply({ embeds: [embed], components: [] }).catch(e => { });
               return collector.stop();
             }
+            break;
             default: {
-              selectedThumbnailURL = maxTracks[Number(button.customId) - 1].thumbnail;
-              embed.setThumbnail(selectedThumbnailURL);
-              embed.setDescription(`**${maxTracks[Number(button.customId) - 1].name}**`);
+              const selectedTrack = res[Number(button.customId) - 1];
+              embed.setThumbnail(selectedTrack.thumbnail.url);
+              embed.setDescription(`**${selectedTrack.name}**`);
               await interaction.editReply({ embeds: [embed], components: [] }).catch(e => { });
               try {
-                await client.distube.play(interaction.member.voice.channel, maxTracks[Number(button.customId) - 1].url, {
+                await client.distube.play(interaction.member.voice.channel, selectedTrack.url, {
                   member: interaction.member,
                   textChannel: interaction.channel,
                   interaction
                 });
               } catch (e) {
-                console.error(`Error during play: ${e}`);
                 await interaction.editReply({ content: `❌ No results!`, ephemeral: true }).catch(e => { });
               }
               return collector.stop();
@@ -107,14 +104,13 @@ module.exports = {
 
         collector.on('end', (msg, reason) => {
           if (reason === 'time') {
-            embed.setDescription('❌ Search timed out');
+            embed.setDescription('Search timed out');
             return interaction.editReply({ embeds: [embed], components: [] }).catch(e => { });
           }
         });
       }).catch(e => { });
     } catch (e) {
-      console.error(`Error in play command: ${e}`);
+      console.error(e);
     }
   },
 };
-module.exports.selectedThumbnailURL = selectedThumbnailURL;
