@@ -14,7 +14,7 @@
    ## YT : https://www.youtube.com/channel/UCPbAvYWBgnYhliJa1BIrv0A
 */
 
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const { DisTube } = require("distube");
 const { SpotifyPlugin } = require("@distube/spotify");
 const { SoundCloudPlugin } = require("@distube/soundcloud");
@@ -26,16 +26,13 @@ const fs = require("fs");
 const path = require('path');
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ]
+  intents: Object.keys(GatewayIntentBits).map((a) => {
+    return GatewayIntentBits[a];
+  }),
 });
 
 client.config = config;
-client.distube = new DisTube(client, {
+client.player = new DisTube(client, {
   leaveOnStop: config.opt.voiceConfig.leaveOnStop,
   leaveOnFinish: config.opt.voiceConfig.leaveOnFinish,
   leaveOnEmpty: config.opt.voiceConfig.leaveOnEmpty.status,
@@ -50,25 +47,24 @@ client.distube = new DisTube(client, {
   ],
 });
 
-const distube = client.distube;
+const player = client.player;
 
 fs.readdir("./events", (_err, files) => {
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
-    const event = require(`./events/${file}`);
+    const event = require(./events/${file});
     let eventName = file.split(".")[0]; 
     client.on(eventName, event.bind(null, client));
-    delete require.cache[require.resolve(`./events/${file}`)];
+    delete require.cache[require.resolve(./events/${file})];
   });
 });
-
 fs.readdir("./events/player", (_err, files) => {
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
-    const player_events = require(`./events/player/${file}`);
+    const player_events = require(./events/player/${file});
     let playerName = file.split(".")[0];
-    distube.on(playerName, player_events.bind(null, client));
-    delete require.cache[require.resolve(`./events/player/${file}`)];
+    player.on(playerName, player_events.bind(null, client));
+    delete require.cache[require.resolve(./events/player/${file})];
   });
 });
 
@@ -78,7 +74,7 @@ fs.readdir(config.commandsDir, (err, files) => {
   files.forEach(async (f) => {
     try {
       if (f.endsWith(".js")) {
-        let props = require(`${config.commandsDir}/${f}`);
+        let props = require(${config.commandsDir}/${f});
         client.commands.push({
           name: props.name,
           description: props.description,
@@ -91,6 +87,8 @@ fs.readdir(config.commandsDir, (err, files) => {
   });
 });
 
+
+
 if (config.TOKEN || process.env.TOKEN) {
   client.login(config.TOKEN || process.env.TOKEN).catch((e) => {
     console.log('TOKEN ERROR❌❌');
@@ -101,19 +99,20 @@ if (config.TOKEN || process.env.TOKEN) {
   }, 2000);
 }
 
+
 if(config.mongodbURL || process.env.MONGO){
   const mongoose = require("mongoose")
   mongoose.connect(config.mongodbURL || process.env.MONGO, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   }).then(async () => {
-    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Connected MongoDB!`)
+    console.log('\x1b[32m%s\x1b[0m', |    🍔 Connected MongoDB!)
   }).catch((err) => {
-    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Failed to connect MongoDB!`)
-  })
-} else {
-  console.log('\x1b[32m%s\x1b[0m', `|    🍔 Error MongoDB!`)
-}
+    console.log('\x1b[32m%s\x1b[0m', |    🍔 Failed to connect MongoDB!)})
+  } else {
+  console.log('\x1b[32m%s\x1b[0m', |    🍔 Error MongoDB!)
+  }
+
 
 const express = require("express");
 const app = express();
@@ -123,8 +122,8 @@ app.get('/', (req, res) => {
   res.sendFile(imagePath);
 });
 app.listen(port, () => {
-  console.log(`🔗 Listening to RTX: http://localhost:${port}`);
-  console.log(`✨ Happy New Year Welcome To 2024`);
+  console.log(🔗 Listening to RTX: http://localhost:${port});
+  console.log(✨ Happy New Year Welcome To 2024);
 });
 printWatermark();
 
