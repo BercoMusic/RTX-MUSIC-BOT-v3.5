@@ -1,3 +1,4 @@
+process.env.YTDL_NO_UPDATE = 'true';
 const config = require('./config.js');
 
 if(config.shardManager.shardStatus == true){
