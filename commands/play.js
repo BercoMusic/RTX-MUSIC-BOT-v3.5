@@ -4,8 +4,8 @@ const db = require("../mongoDB");
 let selectedThumbnailURL;
 
 module.exports = {
-  name: "çal",
-  description: "Hadi biraz müzik dinleyelim!!",
+  name: "play",
+  description: "Müzik çalar!",
   permissions: "0x0000000000000800",
   options: [{
     name: 'şarkı',
@@ -92,14 +92,21 @@ module.exports = {
               embed.setThumbnail(selectedThumbnailURL);
               embed.setDescription(`**${res[Number(button.customId) - 1].name}**`);
               await interaction.editReply({ embeds: [embed], components: [] }).catch(e => { });
+              
               try {
                 await client.player.play(interaction.member.voice.channel, res[Number(button.customId) - 1].url, {
                   member: interaction.member,
                   textChannel: interaction.channel,
                   interaction
                 });
-              } catch (e) {
-                await interaction.editReply({ content: `❌ Şarkı çalınamadı. Lütfen tekrar deneyin veya başka bir şarkı seçin.`, ephemeral: true }).catch(e => { });
+              } catch (error) {
+                if (error.message.includes('Status code: 429')) {
+                  await interaction.editReply({ content: `❌ Çok fazla istek gönderildi. Lütfen biraz bekleyip tekrar deneyin.`, ephemeral: true }).catch(e => { });
+                  console.error('Rate limit aşıldı:', error);
+                } else {
+                  await interaction.editReply({ content: `❌ Şarkı çalınırken bir hata oluştu. Lütfen tekrar deneyin.`, ephemeral: true }).catch(e => { });
+                  console.error('Şarkı çalma hatası:', error);
+                }
               }
               return collector.stop();
             }
@@ -119,4 +126,5 @@ module.exports = {
     }
   },
 };
+
 module.exports.selectedThumbnailURL = selectedThumbnailURL;
