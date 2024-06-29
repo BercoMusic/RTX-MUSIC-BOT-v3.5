@@ -1,5 +1,4 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { DisTube } = require('distube');
 
 module.exports = {
   name: "play",
@@ -50,7 +49,10 @@ module.exports = {
     }
 
     try {
-      await client.player.play(voiceChannel, song.tracks[0]);
+      await client.player.play(voiceChannel, song.tracks[0], {
+        textChannel: interaction.channel,
+        member: interaction.member
+      });
       await interaction.reply({ content: `🎶 Çalıyor: **${song.tracks[0].title}** - ${song.tracks[0].url}` });
     } catch (error) {
       console.error(error);
