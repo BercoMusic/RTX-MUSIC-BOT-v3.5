@@ -1,14 +1,15 @@
 require('dotenv').config();
 process.env.YTDL_NO_UPDATE = 'true';
 const config = require('./config.js');
-if(config.shardManager.shardStatus == true){
+
+if (config.shardManager.shardStatus == true) {
   const { ShardingManager } = require('discord.js');
   const manager = new ShardingManager('./bot.js', { token: config.TOKEN });
   manager.on('shardCreate', shard => console.log(`Launched shard ${shard.id}`));
-  manager.spawn();
+  manager.spawn().catch(console.error);
 } else {
   require("./bot.js");
-} 
+}
 /*
 
   ██████╗░████████╗██╗░░██╗           
