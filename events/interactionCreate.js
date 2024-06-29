@@ -116,7 +116,8 @@ if(config.voteManager.status === true && config.voteManager.api_key){
     }
     } else {
         cmd_loader()
-}} } catch (e) { console.error(e); } }/*
+}} } catch (e) { console.error(e); } }
+/*
 
   ██████╗░████████╗██╗░░██╗           
   ██╔══██╗╚══██╔══╝╚██╗██╔╝          
