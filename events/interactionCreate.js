@@ -14,7 +14,7 @@
    ## YT : https://www.youtube.com/channel/UCPbAvYWBgnYhliJa1BIrv0A
 */
 const config = require("../config.js");
-const { EmbedBuilder, InteractionType, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { EmbedBuilder, InteractionType } = require('discord.js');
 const db = require("../mongoDB");
 const fs = require("fs");
 
@@ -49,7 +49,7 @@ module.exports = async (client, interaction) => {
 
                       if (!channel_filter?.length > 0 && !interaction?.member?.permissions?.has("0x0000000000000020")) {
                         channel_filter = data?.channels?.map(x => `<#${x.channel}>`).join(", ");
-                        return interaction?.reply({ content: '🔴 Rate Limited'.replace("{channel_filter}", channel_filter), ephemeral: true }).catch(e => { });
+                        return interaction?.reply({ content: `🔴 Rate Limited: ${channel_filter}`, ephemeral: true }).catch(e => { });
                       }
                     }
                   }
