@@ -49,7 +49,6 @@ client.player = new Player(client, {
 
 const player = client.player;
 
-// Etkileşim oluşturma olayını ekleyin
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
@@ -61,7 +60,11 @@ client.on('interactionCreate', async interaction => {
         await command.execute(interaction, client);
     } catch (error) {
         console.error(error);
-        await interaction.reply({ content: 'Komutu işlerken bir hata oluştu.', ephemeral: true }).catch(console.error);
+        if (interaction.deferred || interaction.replied) {
+            await interaction.followUp({ content: 'Komutu işlerken bir hata oluştu.', ephemeral: true }).catch(console.error);
+        } else {
+            await interaction.reply({ content: 'Komutu işlerken bir hata oluştu.', ephemeral: true }).catch(console.error);
+        }
     }
 });
 
@@ -86,7 +89,11 @@ const commandFiles = fs.readdirSync(config.commandsDir).filter(file => file.ends
 for (const file of commandFiles) {
     try {
         const command = require(`${config.commandsDir}/${file}`);
-        client.commands.set(command.name, command);
+        if (command.name && typeof command.execute === 'function') {
+            client.commands.set(command.name, command);
+        } else {
+            console.error(`Command ${file} is missing required properties.`);
+        }
     } catch (error) {
         console.error(`Error loading command ${file}:`, error);
     }
