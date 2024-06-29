@@ -55,7 +55,7 @@ async function play(client, interaction) {
             return;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 500)); // Rate limit sorunlarını azaltmak için gecikme
 
         const embeds = [
             new EmbedBuilder()
@@ -77,7 +77,12 @@ async function play(client, interaction) {
             .setTitle('Error')
             .setDescription('An error occurred while processing your request.');
 
-        await interaction.editReply({ embeds: [errorEmbed] });
+        // Interaction'a cevap verilmediyse, cevap vermeyi dene
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.reply({ embeds: [errorEmbed], ephemeral: true }).catch(e => { });
+        } else {
+            await interaction.editReply({ embeds: [errorEmbed] }).catch(e => { });
+        }
     }
 }
 
