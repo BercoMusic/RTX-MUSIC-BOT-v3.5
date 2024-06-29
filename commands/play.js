@@ -1,101 +1,60 @@
-const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
-const db = require("../mongoDB");
-
-const queueNames = [];
-
-async function play(client, interaction) {
-    try {
-        const name = interaction.options.getString('şarkı');
-        if (!name) return interaction.reply({ content: `❌ Lütfen geçerli bir şarkı adı girin.`, ephemeral: true }).catch(e => { });
-
-        const player = client.riffy.createConnection({
-            guildId: interaction.guildId,
-            voiceChannel: interaction.member.voice.channelId,
-            textChannel: interaction.channelId,
-            deaf: true
-        });
-
-        await interaction.deferReply();
-
-        const resolve = await client.riffy.resolve({ query: name, requester: interaction.user });
-        if (!resolve || typeof resolve !== 'object') {
-            throw new TypeError('Resolve response is not an object');
-        }
-
-        const { loadType, tracks, playlistInfo } = resolve;
-
-        if (!Array.isArray(tracks)) {
-            throw new TypeError('Expected tracks to be an array');
-        }
-
-        if (loadType === 'PLAYLIST_LOADED') {
-            for (const track of tracks) {
-                track.info.requester = interaction.user;
-                player.queue.add(track);
-                queueNames.push(track.info.title);
-            }
-
-            if (!player.playing && !player.paused) player.play();
-
-        } else if (loadType === 'SEARCH_RESULT' || loadType === 'TRACK_LOADED') {
-            const track = tracks.shift();
-            track.info.requester = interaction.user;
-
-            player.queue.add(track);
-            queueNames.push(track.info.title);
-
-            if (!player.playing && !player.paused) player.play();
-        } else {
-            const errorEmbed = new EmbedBuilder()
-                .setColor('#ff0000')
-                .setTitle('Error')
-                .setDescription('There are no results found.');
-
-            await interaction.editReply({ embeds: [errorEmbed] });
-            return;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 500)); // Rate limit sorunlarını azaltmak için gecikme
-
-        const embeds = [
-            new EmbedBuilder()
-                .setColor('#4d9fd6')
-                .setAuthor({
-                    name: 'Request Update!',
-                    iconURL: 'https://cdn.discordapp.com/attachments/1230824451990622299/1236794583732457473/7828-verify-ak.gif',
-                    url: 'https://discord.gg/xQF9f9yUEM'
-                })
-                .setDescription('➡️ **Your request has been successfully processed.**\n➡️** Please use the buttons to control the queue**')
-        ];
-
-        await interaction.followUp({ embeds: [embeds[0]] });
-
-    } catch (error) {
-        console.error('Error processing play command:', error);
-        const errorEmbed = new EmbedBuilder()
-            .setColor('#ff0000')
-            .setTitle('Error')
-            .setDescription('An error occurred while processing your request.');
-
-        // Interaction'a cevap verilmediyse, cevap vermeyi dene
-        if (!interaction.deferred && !interaction.replied) {
-            await interaction.reply({ embeds: [errorEmbed], ephemeral: true }).catch(e => { });
-        } else {
-            await interaction.editReply({ embeds: [errorEmbed] }).catch(e => { });
-        }
-    }
-}
+const { ApplicationCommandOptionType } = require('discord.js');
+const { DisTube } = require('distube');
 
 module.exports = {
-    name: "play",
-    description: "Müzik çalar!",
-    permissions: "0x0000000000000800",
-    options: [{
-        name: 'şarkı',
-        description: 'Çalmak istediğiniz şarkının adını yazın.',
-        type: ApplicationCommandOptionType.String,
-        required: true
-    }],
-    run: play,
-    queueNames: queueNames
+  name: "play",
+  description: "Müzik çalar!",
+  permissions: "0x0000000000000800",
+  options: [{
+    name: 'şarkı',
+    description: 'Çalmak istediğiniz şarkının adını yazın.',
+    type: ApplicationCommandOptionType.String,
+    required: true
+  }],
+  run: async (client, interaction) => {
+    const songName = interaction.options.getString('şarkı');
+    if (!songName) {
+      return interaction.reply({ content: `❌ Lütfen geçerli bir şarkı adı girin.`, ephemeral: true });
+    }
+
+    const voiceChannel = interaction.member.voice.channel;
+    if (!voiceChannel) {
+      return interaction.reply({ content: `❌ Lütfen bir ses kanalına katılın.`, ephemeral: true });
+    }
+
+    const queue = client.player.getQueue(interaction.guild.id);
+    let song = null;
+
+    try {
+      song = await client.player.search(songName, {
+        requestedBy: interaction.user
+      });
+    } catch (error) {
+      console.error(error);
+      return interaction.reply({ content: `❌ Şarkı aranırken bir hata oluştu.`, ephemeral: true });
+    }
+
+    if (!song || song.tracks.length === 0) {
+      return interaction.reply({ content: `❌ Şarkı bulunamadı.`, ephemeral: true });
+    }
+
+    if (!queue) {
+      try {
+        await client.player.createQueue(interaction.guild, {
+          metadata: interaction.channel
+        });
+      } catch (error) {
+        console.error(error);
+        return interaction.reply({ content: `❌ Kuyruk oluşturulurken bir hata oluştu.`, ephemeral: true });
+      }
+    }
+
+    try {
+      await client.player.play(voiceChannel, song.tracks[0]);
+      await interaction.reply({ content: `🎶 Çalıyor: **${song.tracks[0].title}** - ${song.tracks[0].url}` });
+    } catch (error) {
+      console.error(error);
+      return interaction.reply({ content: `❌ Şarkı çalınırken bir hata oluştu.`, ephemeral: true });
+    }
+  }
 };
