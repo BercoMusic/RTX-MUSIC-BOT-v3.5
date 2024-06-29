@@ -99,7 +99,10 @@ module.exports = async (client, interaction) => {
                     return interaction?.reply({ content: `▶️ Missing Permissions: **${props?.permissions?.replace("0x0000000000000020", "MANAGE GUILD")?.replace("0x0000000000000800", "SEND MESSAGES") || "SEND MESSAGES"}**`, ephemeral: true });
                   }
                 } catch (e) {
-                  return interaction?.reply({ content: `❌ Error...\n\n\`\`\`${e?.message}\`\`\``, ephemeral: true });
+                  console.error(e);
+                  if (!interaction.replied && !interaction.deferred) {
+                    return interaction?.reply({ content: `❌ Error...\n\n\`\`\`${e?.message}\`\`\``, ephemeral: true });
+                  }
                 }
               }
             });
