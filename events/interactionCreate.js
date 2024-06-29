@@ -24,13 +24,20 @@ module.exports = async (client, interaction) => {
     if (!interaction?.guild) {
       return interaction?.reply({ content: "Rate Limited.", ephemeral: true });
     } else {
-      async function cmd_loader() {
+      function cmd_loader() {
         if (interaction?.type === InteractionType.ApplicationCommand) {
           fs.readdir(config.commandsDir, (err, files) => {
             if (err) throw err;
             files.forEach(async (f) => {
-              let commandPath = path.resolve(__dirname, `..${config.commandsDir}/${f}`);
-              let props = require(commandPath);
+              let commandPath = path.join(__dirname, "..", config.commandsDir, f);
+              let props;
+              try {
+                props = require(commandPath);
+              } catch (error) {
+                console.error(`Komut dosyası yüklenemedi: ${commandPath}`, error);
+                return;
+              }
+
               if (interaction.commandName === props.name) {
                 try {
                   let data = await db?.musicbot?.findOne({ guildID: interaction?.guild?.id });
@@ -128,8 +135,7 @@ module.exports = async (client, interaction) => {
   } catch (e) {
     console.error(e);
   }
-};
-/*
+};/*
 
   ██████╗░████████╗██╗░░██╗           
   ██╔══██╗╚══██╔══╝╚██╗██╔╝          
