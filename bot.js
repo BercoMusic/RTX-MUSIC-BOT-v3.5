@@ -91,29 +91,19 @@ fs.readdir(config.commandsDir, (err, files) => {
 
 
 
-if (config.TOKEN || process.env.TOKEN) {
-  client.login(config.TOKEN || process.env.TOKEN).catch((e) => {
-    console.log('TOKEN ERROR❌❌');
+if (config.mongodbURL || process.env.MONGO) {
+  const mongoose = require("mongoose");
+  mongoose.connect(config.mongodbURL || process.env.MONGO, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  }).then(() => {
+    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Connected MongoDB!`);
+  }).catch((err) => {
+    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Failed to connect MongoDB!`, err);
   });
 } else {
-  setTimeout(() => {
-    console.log('TOKEN ERROR❌❌');
-  }, 2000);
+  console.log('\x1b[32m%s\x1b[0m', `|    🍔 Error MongoDB!`);
 }
-
-
-if(config.mongodbURL || process.env.MONGO){
-  const mongoose = require("mongoose")
-  mongoose.connect(config.mongodbURL || process.env.MONGO, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  }).then(async () => {
-    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Connected MongoDB!`)
-  }).catch((err) => {
-    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Failed to connect MongoDB!`)})
-  } else {
-  console.log('\x1b[32m%s\x1b[0m', `|    🍔 Error MongoDB!`)
-  }
 
 
 const express = require("express");
