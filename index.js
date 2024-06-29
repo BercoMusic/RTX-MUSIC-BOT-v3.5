@@ -1,4 +1,4 @@
-require('dotenv').config();
+index.js require('dotenv').config();
 process.env.YTDL_NO_UPDATE = 'true';
 const config = require('./config.js');
 if(config.shardManager.shardStatus == true){
@@ -8,7 +8,7 @@ if(config.shardManager.shardStatus == true){
   manager.spawn();
 } else {
   require("./bot.js");
-}
+} 
 /*
 
   ██████╗░████████╗██╗░░██╗           
