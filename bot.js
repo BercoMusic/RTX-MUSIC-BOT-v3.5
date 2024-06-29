@@ -1,20 +1,3 @@
-/*
-
-  ██████╗░████████╗██╗░░██╗           
-  ██╔══██╗╚══██╔══╝╚██╗██╔╝          
-  ██████╔╝░░░██║░░░░╚███╔╝░          
-  ██╔══██╗░░░██║░░░░██╔██╗░          
-  ██║░░██║░░░██║░░░██╔╝╚██╗          
-  ╚═╝░░╚═╝░░░╚═╝░░░╚═╝░░╚═╝          
-
-
-   # MADE BY RTX!! FEEL FREE TO USE ANY PART OF CODE
-   ## FOR HELP CONTACT ME ON DISCORD
-   ## Contact    [ DISCORD SERVER :  https://discord.gg/FUEHs7RCqz ]
-   ## YT : https://www.youtube.com/channel/UCPbAvYWBgnYhliJa1BIrv0A
-*/
-
-
 // Discord.js ve ilgili modülleri yükle
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const { DisTube } = require("distube");
@@ -91,19 +74,29 @@ fs.readdir(config.commandsDir, (err, files) => {
 
 
 
-if (config.mongodbURL || process.env.MONGO) {
-  const mongoose = require("mongoose");
-  mongoose.connect(config.mongodbURL || process.env.MONGO, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }).then(() => {
-    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Connected MongoDB!`);
-  }).catch((err) => {
-    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Failed to connect MongoDB!`, err);
+if (config.TOKEN || process.env.TOKEN) {
+  client.login(config.TOKEN || process.env.TOKEN).catch((e) => {
+    console.log('TOKEN ERROR❌❌');
   });
 } else {
-  console.log('\x1b[32m%s\x1b[0m', `|    🍔 Error MongoDB!`);
+  setTimeout(() => {
+    console.log('TOKEN ERROR❌❌');
+  }, 2000);
 }
+
+
+if(config.mongodbURL || process.env.MONGO){
+  const mongoose = require("mongoose")
+  mongoose.connect(config.mongodbURL || process.env.MONGO, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  }).then(async () => {
+    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Connected MongoDB!`)
+  }).catch((err) => {
+    console.log('\x1b[32m%s\x1b[0m', `|    🍔 Failed to connect MongoDB!`)})
+  } else {
+  console.log('\x1b[32m%s\x1b[0m', `|    🍔 Error MongoDB!`)
+  }
 
 
 const express = require("express");
@@ -117,18 +110,3 @@ app.listen(port, () => {
   console.log(`🔗 Listening to GlaceYT: http://localhost:${port}`);
 });
 printWatermark();
-/*
-
-  ██████╗░████████╗██╗░░██╗           
-  ██╔══██╗╚══██╔══╝╚██╗██╔╝          
-  ██████╔╝░░░██║░░░░╚███╔╝░          
-  ██╔══██╗░░░██║░░░░██╔██╗░          
-  ██║░░██║░░░██║░░░██╔╝╚██╗          
-  ╚═╝░░╚═╝░░░╚═╝░░░╚═╝░░╚═╝          
-
-
-   # MADE BY RTX!! FEEL FREE TO USE ANY PART OF CODE
-   ## FOR HELP CONTACT ME ON DISCORD
-   ## Contact    [ DISCORD SERVER :  https://discord.gg/FUEHs7RCqz ]
-   ## YT : https://www.youtube.com/channel/UCPbAvYWBgnYhliJa1BIrv0A
-*/
