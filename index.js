@@ -1,4 +1,4 @@
-index.js require('dotenv').config();
+require('dotenv').config();
 process.env.YTDL_NO_UPDATE = 'true';
 const config = require('./config.js');
 if(config.shardManager.shardStatus == true){
