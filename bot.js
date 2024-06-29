@@ -42,16 +42,22 @@ client.player = new Player(client, {
 
 const player = client.player;
 
+// Events loading
 fs.readdir("./events", (_err, files) => {
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
     const event = require(`./events/${file}`);
     let eventName = file.split(".")[0];
-    client.on(eventName, event.bind(null, client));
+    if (eventName === 'interactionCreate') {
+      client.on('interactionCreate', event.bind(null, client));
+    } else {
+      client.on(eventName, event.bind(null, client));
+    }
     delete require.cache[require.resolve(`./events/${file}`)];
   });
 });
 
+// Player events loading
 fs.readdir("./events/player", (_err, files) => {
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
@@ -62,6 +68,7 @@ fs.readdir("./events/player", (_err, files) => {
   });
 });
 
+// Commands loading
 fs.readdir(config.commandsDir, (err, files) => {
   if (err) throw err;
   files.forEach(async (f) => {
@@ -76,6 +83,7 @@ fs.readdir(config.commandsDir, (err, files) => {
   });
 });
 
+// Bot login
 if (process.env.TOKEN) {
   client.login(process.env.TOKEN).catch(e => {
     console.log("Bot TOKEN'i geçersiz!")
@@ -84,6 +92,7 @@ if (process.env.TOKEN) {
   console.log("TOKEN environment variable'ı bulunamadı!")
 }
 
+// Error handling
 process.on('unhandledRejection', error => {
   console.log(error);
 });
