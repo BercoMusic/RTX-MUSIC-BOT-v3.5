@@ -1,5 +1,5 @@
 {
-  "name": "MUSIC NW",
+  "name": "MUSIC",
   "version": "15.3.0",
   "description": "discord.js v14.7 music bot. for slash commands",
   "main": "index.js",
@@ -26,14 +26,12 @@
     "mongoose": "^6.11.6",
     "random-anime": "^1.0.6",
     "sapphire": "^0.0.3",
-    "topgg-autoposter": "^2.0.1",
-    "dotenv": "^16.0.3",
-    "discord-player": "^6.6.1"
+    "topgg-autoposter": "^2.0.1"
   },
   "scripts": {
     "start": "node index.js"
   },
-  "author": "RTX GAMING",
+  "author": "GlaceYT",
   "license": "XX",
   "engines": {
     "node": "18.x"
