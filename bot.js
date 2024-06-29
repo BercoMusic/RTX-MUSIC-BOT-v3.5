@@ -18,14 +18,9 @@
 // Discord.js ve ilgili modülleri yükle
 const { Client, GatewayIntentBits, Partials, Collection } = require("discord.js");
 const { Player } = require("discord-player");
-
-// Config dosyasını yükle
 const config = require("./config.js");
-
-// Dosya işlemleri için fs modülünü yükle
 const fs = require("fs");
 
-// Discord istemcisini oluştur ve yapılandır
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -43,13 +38,8 @@ const client = new Client({
     ]
 });
 
-// Config dosyasını istemciye ekle
 client.config = config;
-
-// Komutları saklamak için bir Collection oluştur
 client.commands = new Collection();
-
-// Discord Player'ı istemciye ekle
 client.player = new Player(client, {
     ytdlOptions: {
         quality: "highestaudio",
@@ -57,58 +47,63 @@ client.player = new Player(client, {
     }
 });
 
-// Player'ı ayrı bir değişkene ekle
 const player = client.player;
 
-// "./events" klasöründeki olayları yükle
-fs.readdir("./events", (_err, files) => {
-    files.forEach((file) => {
-        if (!file.endsWith(".js")) return;
-        const event = require(`./events/${file}`);
-        let eventName = file.split(".")[0];
-        client.on(eventName, event.bind(null, client));
-        delete require.cache[require.resolve(`./events/${file}`)];
-    });
+// Etkileşim oluşturma olayını ekleyin
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+
+    const command = client.commands.get(interaction.commandName);
+
+    if (!command) return;
+
+    try {
+        await command.execute(interaction, client);
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'Komutu işlerken bir hata oluştu.', ephemeral: true }).catch(console.error);
+    }
 });
 
-// "./events/player" klasöründeki player olaylarını yükle
-fs.readdir("./events/player", (_err, files) => {
-    files.forEach((file) => {
-        if (!file.endsWith(".js")) return;
-        const player_events = require(`./events/player/${file}`);
-        let playerName = file.split(".")[0];
-        player.on(playerName, player_events.bind(null, client));
-        delete require.cache[require.resolve(`./events/player/${file}`)];
-    });
-});
-
-// Komutları "./commands" klasöründen yükle
-fs.readdir(config.commandsDir, (err, files) => {
-    if (err) throw err;
-    files.forEach(async (f) => {
-        try {
-            if (f.endsWith(".js")) {
-                let props = require(`${config.commandsDir}/${f}`);
-                client.commands.set(props.name, props);
-            }
-        } catch (err) {
-            console.log(err);
-        }
-    });
-});
-
-// Bot TOKEN'ını çevre değişkenlerinden alarak giriş yap
-if (process.env.TOKEN) {
-    client.login(process.env.TOKEN).catch(e => {
-        console.log("Bot TOKEN'i geçersiz!");
-    });
-} else {
-    console.log("TOKEN environment variable'ı bulunamadı!");
+// Olayları yükle
+const eventFiles = fs.readdirSync("./events").filter(file => file.endsWith(".js"));
+for (const file of eventFiles) {
+    const event = require(`./events/${file}`);
+    const eventName = file.split(".")[0];
+    client.on(eventName, event.bind(null, client));
 }
 
-// İşlenmemiş promise hatalarını yakala ve konsola yazdır
+// Player olaylarını yükle
+const playerEventFiles = fs.readdirSync("./events/player").filter(file => file.endsWith(".js"));
+for (const file of playerEventFiles) {
+    const playerEvent = require(`./events/player/${file}`);
+    const playerEventName = file.split(".")[0];
+    player.on(playerEventName, playerEvent.bind(null, client));
+}
+
+// Komutları yükle
+const commandFiles = fs.readdirSync(config.commandsDir).filter(file => file.endsWith(".js"));
+for (const file of commandFiles) {
+    try {
+        const command = require(`${config.commandsDir}/${file}`);
+        client.commands.set(command.name, command);
+    } catch (error) {
+        console.error(`Error loading command ${file}:`, error);
+    }
+}
+
+// Bot'u başlat
+if (process.env.TOKEN) {
+    client.login(process.env.TOKEN).catch(error => {
+        console.error("Bot TOKEN'i geçersiz veya bir hata oluştu:", error);
+    });
+} else {
+    console.error("TOKEN environment variable'ı bulunamadı!");
+}
+
+// İşlenmemiş hataları yakala
 process.on('unhandledRejection', error => {
-    console.log(error);
+    console.error('Unhandled promise rejection:', error);
 });
 /*
 
